@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Indefinido & Imperfecto Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FAF6EC;
+    --ink: #211D1A;
+    --ink-soft: #6B6255;
+    --line: #DCD3BF;
+    --indef: #B5541F;
+    --indef-soft: #F1DFCB;
+    --imperf: #2E5C58;
+    --imperf-soft: #DCE8E2;
+    --good: #35714F;
+    --good-soft: #E2EEE1;
+    --bad: #A23B34;
+    --bad-soft: #F5DFDB;
+    --card: #FFFFFF;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1C1A16;
+      --ink: #EFE8DA;
+      --ink-soft: #A69C8B;
+      --line: #3A3529;
+      --indef-soft: #3B2A1C;
+      --imperf-soft: #1E332F;
+      --good-soft: #1E2E22;
+      --bad-soft: #331F1C;
+      --card: #24211B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1C1A16;
+    --ink: #EFE8DA;
+    --ink-soft: #A69C8B;
+    --line: #3A3529;
+    --indef-soft: #3B2A1C;
+    --imperf-soft: #1E332F;
+    --good-soft: #1E2E22;
+    --bad-soft: #331F1C;
+    --card: #24211B;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  header {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--indef);
+  }
+  h1 span.imp {
+    color: var(--imperf);
+    font-style: normal;
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+  nav.tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 18px 0;
+  }
+  nav.tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    padding: 10px 4px 12px;
+    cursor: pointer;
+  }
+  nav.tabs button.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  main {
+    flex: 1;
+    padding: 18px 18px 40px;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* --- Setup controls --- */
+  .setup-group { margin-bottom: 18px; }
+  .setup-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .choice-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .choice {
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .choice.sel-indef { border-color: var(--indef); background: var(--indef-soft); color: var(--indef); font-weight: 600; }
+  .choice.sel-imperf { border-color: var(--imperf); background: var(--imperf-soft); color: var(--imperf); font-weight: 600; }
+  .choice.sel-neutral { border-color: var(--ink); background: var(--ink); color: var(--paper); font-weight: 600; }
+
+  .start-btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* --- Drill card --- */
+  .drill-wrap { display: flex; flex-direction: column; gap: 14px; }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .score-row button.reset {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 26px 22px;
+    text-align: center;
+  }
+  .card .tense-flag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
+  }
+  .tense-flag.indef { background: var(--indef-soft); color: var(--indef); }
+  .tense-flag.imperf { background: var(--imperf-soft); color: var(--imperf); }
+  .card .infinitive {
+    font-family: "Fraunces", serif;
+    font-size: 30px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .card .pronoun {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+  }
+  .answer-form {
+    display: flex;
+    gap: 8px;
+  }
+  .answer-form input {
+    flex: 1;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 18px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    min-width: 0;
+  }
+  .answer-form input:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+  .answer-form button {
+    padding: 0 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .feedback {
+    margin-top: 16px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    text-align: left;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--good-soft); color: var(--good); }
+  .feedback.bad { background: var(--bad-soft); color: var(--bad); }
+  .feedback.close { background: var(--bad-soft); color: var(--bad); }
+  .feedback strong { font-family: "IBM Plex Mono", monospace; font-size: 16px; }
+  .next-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: none;
+    font-family: inherit;
+  }
+  .next-btn.show { display: block; }
+
+  /* --- Endings drill rows --- */
+  .end-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .end-row .end-p {
+    width: 34%;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+  .end-row input {
+    flex: 1;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 16px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    min-width: 0;
+  }
+  .end-row input:focus { outline: none; border-color: var(--ink); }
+  .end-row input.r-good { border-color: var(--good); background: var(--good-soft); }
+  .end-row input.r-close { border-color: var(--bad); background: var(--bad-soft); }
+  .end-row input.r-bad { border-color: var(--bad); background: var(--bad-soft); }
+  .end-row .end-correct {
+    width: 34%;
+    flex-shrink: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13.5px;
+    color: var(--bad);
+    display: none;
+  }
+  .end-row .end-correct.show { display: block; }
+
+  /* --- Reference tables --- */
+  .ref-verb {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .ref-verb summary {
+    padding: 14px 16px;
+    cursor: pointer;
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 18px;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ref-verb summary::-webkit-details-marker { display: none; }
+  .ref-verb summary .tag {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 9px;
+  }
+  .ref-tables {
+    display: flex;
+    border-top: 1px solid var(--line);
+  }
+  .ref-col { flex: 1; padding: 12px 14px 16px; }
+  .ref-col:first-child { border-right: 1px solid var(--line); }
+  .ref-col h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .ref-col.indef h4 { color: var(--indef); }
+  .ref-col.imperf h4 { color: var(--imperf); }
+  .ref-col table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .ref-col td { padding: 3px 0; }
+  .ref-col td.p { color: var(--ink-soft); width: 40%; }
+  .ref-col td.f { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+
+  .rules-box {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .rules-box h3 {
+    font-family: "Fraunces", serif;
+    font-size: 16px;
+    margin: 0 0 8px;
+  }
+  .rules-box.indef { border-left: 4px solid var(--indef); }
+  .rules-box.imperf { border-left: 4px solid var(--imperf); }
+  .rules-box ul { margin: 6px 0 0; padding-left: 18px; }
+  .rules-box li { margin-bottom: 4px; }
+
+  @media (max-width: 420px) {
+    .ref-tables { flex-direction: column; }
+    .ref-col:first-child { border-right: none; border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><em>Indefinido</em> &amp; <span class="imp">Imperfecto</span></h1>
+  <p class="sub">Konjugationstrainer für deine Spanisch-Klausur</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-panel="drill">Üben</button>
+  <button class="tab-btn" data-panel="endings">Endungen</button>
+  <button class="tab-btn" data-panel="ref">Nachschlagen</button>
+  <button class="tab-btn" data-panel="rules">Regeln</button>
+</nav>
+
+<main>
+
+  <!-- DRILL PANEL -->
+  <section id="panel-drill" class="panel active">
+
+    <div id="setup">
+      <div class="setup-group">
+        <div class="setup-label">ZEIT</div>
+        <div class="choice-row" id="tense-choices">
+          <button class="choice" data-val="pret">Indefinido</button>
+          <button class="choice" data-val="imp">Imperfecto</button>
+          <button class="choice sel-neutral" data-val="mix">Gemischt</button>
+        </div>
+      </div>
+      <div class="setup-group">
+        <div class="setup-label">VERBEN</div>
+        <div class="choice-row" id="pool-choices">
+          <button class="choice" data-val="regular">Regelmäßig</button>
+          <button class="choice" data-val="irregular">Unregelmäßig</button>
+          <button class="choice sel-neutral" data-val="all">Alle</button>
+        </div>
+      </div>
+      <button class="start-btn" id="start-btn">Training starten</button>
+    </div>
+
+    <div class="drill-wrap" id="drill-wrap" style="display:none;">
+      <div class="score-row">
+        <span id="score-text">0 richtig · 0 gesamt</span>
+        <button class="reset" id="change-setup">Einstellungen ändern</button>
+      </div>
+      <div class="card">
+        <div class="tense-flag" id="tense-flag">Indefinido</div>
+        <p class="infinitive" id="q-infinitive">hablar</p>
+        <p class="pronoun" id="q-pronoun">yo</p>
+        <form class="answer-form" id="answer-form" autocomplete="off">
+          <input type="text" id="answer-input" placeholder="Form eingeben…" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <button type="submit">Prüfen</button>
+        </form>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="next-btn">Weiter →</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ENDINGS PANEL -->
+  <section id="panel-endings" class="panel">
+
+    <p class="sub" style="margin-bottom:16px;">Schreib zu einem regelmäßigen Verb alle sechs Formen auf einmal — so prägst du dir die Endungsmuster ein, nicht einzelne Verben.</p>
+
+    <div id="end-setup">
+      <div class="setup-group">
+        <div class="setup-label">ZEIT</div>
+        <div class="choice-row" id="end-tense-choices">
+          <button class="choice" data-val="pret">Indefinido</button>
+          <button class="choice" data-val="imp">Imperfecto</button>
+          <button class="choice sel-neutral" data-val="mix">Gemischt</button>
+        </div>
+      </div>
+      <div class="setup-group">
+        <div class="setup-label">ENDUNG</div>
+        <div class="choice-row" id="end-group-choices">
+          <button class="choice" data-val="ar">-ar</button>
+          <button class="choice" data-val="er">-er</button>
+          <button class="choice" data-val="ir">-ir</button>
+          <button class="choice sel-neutral" data-val="mixg">Gemischt</button>
+        </div>
+      </div>
+      <button class="start-btn" id="end-start-btn">Training starten</button>
+    </div>
+
+    <div class="drill-wrap" id="end-drill-wrap" style="display:none;">
+      <div class="score-row">
+        <span id="end-score-text">0 Formen richtig · 0 Runden</span>
+        <button class="reset" id="end-change-setup">Einstellungen ändern</button>
+      </div>
+      <div class="card" style="text-align:left;">
+        <div class="tense-flag" id="end-tense-flag" style="display:block; width:fit-content;">Indefinido</div>
+        <p class="infinitive" id="end-q-infinitive" style="text-align:center;">hablar</p>
+        <p class="sub" id="end-q-hint" style="text-align:center; margin-top:-8px; margin-bottom:18px;">-ar regelmäßig</p>
+
+        <form id="end-answer-form" autocomplete="off">
+          <div id="end-input-grid" style="display:flex; flex-direction:column; gap:10px;"></div>
+          <button type="submit" class="start-btn" style="margin-top:18px;">Alle prüfen</button>
+        </form>
+
+        <button class="next-btn" id="end-next-btn">Weiter →</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- REFERENCE PANEL -->
+  <section id="panel-ref" class="panel">
+    <div id="ref-list"></div>
+  </section>
+
+  <!-- RULES PANEL -->
+  <section id="panel-rules" class="panel">
+    <div class="rules-box indef">
+      <h3>Indefinido (Pretérito Indefinido)</h3>
+      <p>Für abgeschlossene Handlungen in der Vergangenheit — mit klarem Anfang und Ende.</p>
+      <ul>
+        <li>Einmalige, punktuelle Ereignisse: <em>Ayer fui al cine.</em></li>
+        <li>Handlungen mit klarer Dauer/Abschluss: <em>Viví en Madrid dos años.</em></li>
+        <li>Aufeinanderfolgende Handlungen: <em>Me levanté, desayuné y salí.</em></li>
+        <li>Typische Signalwörter: ayer, anoche, el año pasado, una vez, de repente</li>
+      </ul>
+    </div>
+    <div class="rules-box imperf">
+      <h3>Imperfecto (Pretérito Imperfecto)</h3>
+      <p>Für Handlungen ohne festen Abschluss — Beschreibungen, Gewohnheiten, Hintergrund.</p>
+      <ul>
+        <li>Gewohnheiten/wiederholte Handlungen früher: <em>Cuando era niño, jugaba mucho.</em></li>
+        <li>Beschreibungen (Personen, Orte, Zustände): <em>Hacía frío y el cielo estaba gris.</em></li>
+        <li>Gleichzeitige/andauernde Handlungen als Hintergrund: <em>Mientras cocinaba, escuchaba música.</em></li>
+        <li>Uhrzeit und Alter in der Vergangenheit: <em>Eran las tres. Tenía diez años.</em></li>
+        <li>Typische Signalwörter: siempre, a menudo, mientras, todos los días, de niño</li>
+      </ul>
+    </div>
+    <div class="rules-box">
+      <h3>Beide zusammen</h3>
+      <p>Oft im selben Satz: Imperfecto beschreibt den Hintergrund/Zustand, Indefinido die Handlung, die ihn unterbricht.</p>
+      <ul>
+        <li><em>Dormía cuando sonó el teléfono.</em> — „Ich schlief (Hintergrund), als das Telefon klingelte (Ereignis).“</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function() {
+  const PRONOUNS = ["yo", "tú", "él/ella/Ud.", "nosotros", "vosotros", "ellos/ellas/Uds."];
+
+  // Verb data: forms[pret][0..5], forms[imp][0..5]
+  const VERBS = [
+    // --- REGULAR MODELS ---
+    { inf: "hablar", type: "regular", tag: "-ar regelmäßig",
+      pret: ["hablé","hablaste","habló","hablamos","hablasteis","hablaron"],
+      imp:  ["hablaba","hablabas","hablaba","hablábamos","hablabais","hablaban"] },
+    { inf: "comer", type: "regular", tag: "-er regelmäßig",
+      pret: ["comí","comiste","comió","comimos","comisteis","comieron"],
+      imp:  ["comía","comías","comía","comíamos","comíais","comían"] },
+    { inf: "vivir", type: "regular", tag: "-ir regelmäßig",
+      pret: ["viví","viviste","vivió","vivimos","vivisteis","vivieron"],
+      imp:  ["vivía","vivías","vivía","vivíamos","vivíais","vivían"] },
+    { inf: "trabajar", type: "regular", tag: "-ar regelmäßig",
+      pret: ["trabajé","trabajaste","trabajó","trabajamos","trabajasteis","trabajaron"],
+      imp:  ["trabajaba","trabajabas","trabajaba","trabajábamos","trabajabais","trabajaban"] },
+    { inf: "estudiar", type: "regular", tag: "-ar regelmäßig",
+      pret: ["estudié","estudiaste","estudió","estudiamos","estudiasteis","estudiaron"],
+      imp:  ["estudiaba","estudiabas","estudiaba","estudiábamos","estudiabais","estudiaban"] },
+    { inf: "comprar", type: "regular", tag: "-ar regelmäßig",
+      pret: ["compré","compraste","compró","compramos","comprasteis","compraron"],
+      imp:  ["compraba","comprabas","compraba","comprábamos","comprabais","compraban"] },
+    { inf: "aprender", type: "regular", tag: "-er regelmäßig",
+      pret: ["aprendí","aprendiste","aprendió","aprendimos","aprendisteis","aprendieron"],
+      imp:  ["aprendía","aprendías","aprendía","aprendíamos","aprendíais","aprendían"] },
+    { inf: "vender", type: "regular", tag: "-er regelmäßig",
+      pret: ["vendí","vendiste","vendió","vendimos","vendisteis","vendieron"],
+      imp:  ["vendía","vendías","vendía","vendíamos","vendíais","vendían"] },
+    { inf: "escribir", type: "regular", tag: "-ir regelmäßig",
+      pret: ["escribí","escribiste","escribió","escribimos","escribisteis","escribieron"],
+      imp:  ["escribía","escribías","escribía","escribíamos","escribíais","escribían"] },
+    { inf: "abrir", type: "regular", tag: "-ir regelmäßig",
+      pret: ["abrí","abriste","abrió","abrimos","abristeis","abrieron"],
+      imp:  ["abría","abrías","abría","abríamos","abríais","abrían"] },
+    { inf: "decidir", type: "regular", tag: "-ir regelmäßig",
+      pret: ["decidí","decidiste","decidió","decidimos","decidisteis","decidieron"],
+      imp:  ["decidía","decidías","decidía","decidíamos","decidíais","decidían"] },
+
+    // --- SPELLING-CHANGE (still "regular" pattern group, but yo-form shift) ---
+    { inf: "buscar", type: "regular", tag: "-car (yo: qu)",
+      pret: ["busqué","buscaste","buscó","buscamos","buscasteis","buscaron"],
+      imp:  ["buscaba","buscabas","buscaba","buscábamos","buscabais","buscaban"] },
+    { inf: "llegar", type: "regular", tag: "-gar (yo: gu)",
+      pret: ["llegué","llegaste","llegó","llegamos","llegasteis","llegaron"],
+      imp:  ["llegaba","llegabas","llegaba","llegábamos","llegabais","llegaban"] },
+    { inf: "empezar", type: "regular", tag: "-zar (yo: c)",
+      pret: ["empecé","empezaste","empezó","empezamos","empezasteis","empezaron"],
+      imp:  ["empezaba","empezabas","empezaba","empezábamos","empezabais","empezaban"] },
+    { inf: "leer", type: "regular", tag: "i→y (Vokal+er/ir)",
+      pret: ["leí","leíste","leyó","leímos","leísteis","leyeron"],
+      imp:  ["leía","leías","leía","leíamos","leíais","leían"] },
+    { inf: "oír", type: "irregular", tag: "i→y (Vokal+er/ir)",
+      pret: ["oí","oíste","oyó","oímos","oísteis","oyeron"],
+      imp:  ["oía","oías","oía","oíamos","oíais","oían"] },
+    { inf: "construir", type: "irregular", tag: "i→y (Vokal+er/ir)",
+      pret: ["construí","construiste","construyó","construimos","construisteis","construyeron"],
+      imp:  ["construía","construías","construía","construíamos","construíais","construían"] },
+    { inf: "caer", type: "irregular", tag: "i→y (Vokal+er/ir)",
+      pret: ["caí","caíste","cayó","caímos","caísteis","cayeron"],
+      imp:  ["caía","caías","caía","caíamos","caíais","caían"] },
+
+    // --- IRREGULAR: stem-changing -ir (only 3rd persons in pretérito) ---
+    { inf: "pedir", type: "irregular", tag: "e→i (nur 3. Pers.)",
+      pret: ["pedí","pediste","pidió","pedimos","pedisteis","pidieron"],
+      imp:  ["pedía","pedías","pedía","pedíamos","pedíais","pedían"] },
+    { inf: "dormir", type: "irregular", tag: "o→u (nur 3. Pers.)",
+      pret: ["dormí","dormiste","durmió","dormimos","dormisteis","durmieron"],
+      imp:  ["dormía","dormías","dormía","dormíamos","dormíais","dormían"] },
+    { inf: "morir", type: "irregular", tag: "o→u (nur 3. Pers.)",
+      pret: ["morí","moriste","murió","morimos","moristeis","murieron"],
+      imp:  ["moría","morías","moría","moríamos","moríais","morían"] },
+    { inf: "sentir", type: "irregular", tag: "e→i (nur 3. Pers.)",
+      pret: ["sentí","sentiste","sintió","sentimos","sentisteis","sintieron"],
+      imp:  ["sentía","sentías","sentía","sentíamos","sentíais","sentían"] },
+    { inf: "preferir", type: "irregular", tag: "e→i (nur 3. Pers.)",
+      pret: ["preferí","preferiste","prefirió","preferimos","preferisteis","prefirieron"],
+      imp:  ["prefería","preferías","prefería","preferíamos","preferíais","preferían"] },
+
+    // --- FULLY IRREGULAR PRETÉRITO ---
+    { inf: "ser", type: "irregular", tag: "irregulär (= ir)",
+      pret: ["fui","fuiste","fue","fuimos","fuisteis","fueron"],
+      imp:  ["era","eras","era","éramos","erais","eran"] },
+    { inf: "ir", type: "irregular", tag: "irregulär (= ser)",
+      pret: ["fui","fuiste","fue","fuimos","fuisteis","fueron"],
+      imp:  ["iba","ibas","iba","íbamos","ibais","iban"] },
+    { inf: "dar", type: "irregular", tag: "irregulär",
+      pret: ["di","diste","dio","dimos","disteis","dieron"],
+      imp:  ["daba","dabas","daba","dábamos","dabais","daban"] },
+    { inf: "ver", type: "irregular", tag: "irregulär in beiden Zeiten",
+      pret: ["vi","viste","vio","vimos","visteis","vieron"],
+      imp:  ["veía","veías","veía","veíamos","veíais","veían"] },
+    { inf: "hacer", type: "irregular", tag: "irregulär",
+      pret: ["hice","hiciste","hizo","hicimos","hicisteis","hicieron"],
+      imp:  ["hacía","hacías","hacía","hacíamos","hacíais","hacían"] },
+    { inf: "poder", type: "irregular", tag: "irregulär",
+      pret: ["pude","pudiste","pudo","pudimos","pudisteis","pudieron"],
+      imp:  ["podía","podías","podía","podíamos","podíais","podían"] },
+    { inf: "poner", type: "irregular", tag: "irregulär",
+      pret: ["puse","pusiste","puso","pusimos","pusisteis","pusieron"],
+      imp:  ["ponía","ponías","ponía","poníamos","poníais","ponían"] },
+    { inf: "saber", type: "irregular", tag: "irregulär",
+      pret: ["supe","supiste","supo","supimos","supisteis","supieron"],
+      imp:  ["sabía","sabías","sabía","sabíamos","sabíais","sabían"] },
+    { inf: "querer", type: "irregular", tag: "irregulär",
+      pret: ["quise","quisiste","quiso","quisimos","quisisteis","quisieron"],
+      imp:  ["quería","querías","quería","queríamos","queríais","querían"] },
+    { inf: "venir", type: "irregular", tag: "irregulär",
+      pret: ["vine","viniste","vino","vinimos","vinisteis","vinieron"],
+      imp:  ["venía","venías","venía","veníamos","veníais","venían"] },
+    { inf: "decir", type: "irregular", tag: "irregulär",
+      pret: ["dije","dijiste","dijo","dijimos","dijisteis","dijeron"],
+      imp:  ["decía","decías","decía","decíamos","decíais","decían"] },
+    { inf: "traer", type: "irregular", tag: "irregulär",
+      pret: ["traje","trajiste","trajo","trajimos","trajisteis","trajeron"],
+      imp:  ["traía","traías","traía","traíamos","traíais","traían"] },
+    { inf: "estar", type: "irregular", tag: "irregulär",
+      pret: ["estuve","estuviste","estuvo","estuvimos","estuvisteis","estuvieron"],
+      imp:  ["estaba","estabas","estaba","estábamos","estabais","estaban"] },
+    { inf: "tener", type: "irregular", tag: "irregulär",
+      pret: ["tuve","tuviste","tuvo","tuvimos","tuvisteis","tuvieron"],
+      imp:  ["tenía","tenías","tenía","teníamos","teníais","tenían"] },
+    { inf: "andar", type: "irregular", tag: "irregulär",
+      pret: ["anduve","anduviste","anduvo","anduvimos","anduvisteis","anduvieron"],
+      imp:  ["andaba","andabas","andaba","andábamos","andabais","andaban"] },
+    { inf: "conducir", type: "irregular", tag: "irregulär (-j-)",
+      pret: ["conduje","condujiste","condujo","condujimos","condujisteis","condujeron"],
+      imp:  ["conducía","conducías","conducía","conducíamos","conducíais","conducían"] },
+    { inf: "traducir", type: "irregular", tag: "irregulär (-j-)",
+      pret: ["traduje","tradujiste","tradujo","tradujimos","tradujisteis","tradujeron"],
+      imp:  ["traducía","traducías","traducía","traducíamos","traducíais","traducían"] },
+    { inf: "producir", type: "irregular", tag: "irregulär (-j-)",
+      pret: ["produje","produjiste","produjo","produjimos","produjisteis","produjeron"],
+      imp:  ["producía","producías","producía","producíamos","producíais","producían"] },
+  ];
+
+  // Fully regular verbs (no spelling shifts, no stem changes) — used for the endings drill,
+  // so the focus stays on the ending pattern rather than an irregularity.
+  const REGULAR_POOL = {
+    ar: ["hablar","trabajar","estudiar","comprar","escuchar","mirar","caminar","cocinar","viajar","cantar"],
+    er: ["comer","beber","aprender","correr","vender","meter","toser","comprender"],
+    ir: ["vivir","escribir","abrir","decidir","subir","describir","discutir"],
+  };
+  const ENDINGS = {
+    ar: {
+      pret: ["é","aste","ó","amos","asteis","aron"],
+      imp:  ["aba","abas","aba","ábamos","abais","aban"],
+    },
+    er: {
+      pret: ["í","iste","ió","imos","isteis","ieron"],
+      imp:  ["ía","ías","ía","íamos","íais","ían"],
+    },
+    ir: {
+      pret: ["í","iste","ió","imos","isteis","ieron"],
+      imp:  ["ía","ías","ía","íamos","íais","ían"],
+    },
+  };
+  function conjugateRegular(inf, group, tense) {
+    const stem = inf.slice(0, -2);
+    return ENDINGS[group][tense].map(e => stem + e);
+  }
+
+  function stripAccents(s) {
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  // ---------- TAB SWITCHING ----------
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.panel).classList.add("active");
+    });
+  });
+
+  // ---------- SETUP CHOICES ----------
+  let chosenTense = "mix";
+  let chosenPool = "all";
+
+  function wireChoiceRow(id, applyClass, onPick) {
+    const row = document.getElementById(id);
+    row.querySelectorAll(".choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        row.querySelectorAll(".choice").forEach(b => b.classList.remove("sel-indef","sel-imperf","sel-neutral"));
+        btn.classList.add(applyClass(btn.dataset.val));
+        onPick(btn.dataset.val);
+      });
+    });
+  }
+  wireChoiceRow("tense-choices", (val) => val === "pret" ? "sel-indef" : val === "imp" ? "sel-imperf" : "sel-neutral", (val) => chosenTense = val);
+  wireChoiceRow("pool-choices", () => "sel-neutral", (val) => chosenPool = val);
+
+  // ---------- DRILL STATE ----------
+  let pool = [];
+  let current = null; // { verb, pronounIdx, tense }
+  let correctCount = 0, totalCount = 0;
+  let answered = false;
+
+  function buildPool() {
+    return VERBS.filter(v => chosenPool === "all" || v.type === chosenPool);
+  }
+
+  function pickQuestion() {
+    const verb = pool[Math.floor(Math.random() * pool.length)];
+    const pronounIdx = Math.floor(Math.random() * 6);
+    let tense = chosenTense;
+    if (tense === "mix") tense = Math.random() < 0.5 ? "pret" : "imp";
+    current = { verb, pronounIdx, tense };
+    return current;
+  }
+
+  function renderQuestion() {
+    const { verb, pronounIdx, tense } = current;
+    const flag = document.getElementById("tense-flag");
+    flag.textContent = tense === "pret" ? "Indefinido" : "Imperfecto";
+    flag.className = "tense-flag " + (tense === "pret" ? "indef" : "imperf");
+    document.getElementById("q-infinitive").textContent = verb.inf;
+    document.getElementById("q-pronoun").textContent = PRONOUNS[pronounIdx];
+    const input = document.getElementById("answer-input");
+    input.value = "";
+    input.disabled = false;
+    document.getElementById("feedback").className = "feedback";
+    document.getElementById("next-btn").className = "next-btn";
+    answered = false;
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function updateScore() {
+    document.getElementById("score-text").textContent = correctCount + " richtig · " + totalCount + " gesamt";
+  }
+
+  document.getElementById("start-btn").addEventListener("click", () => {
+    pool = buildPool();
+    correctCount = 0; totalCount = 0;
+    updateScore();
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("drill-wrap").style.display = "flex";
+    pickQuestion();
+    renderQuestion();
+  });
+
+  document.getElementById("change-setup").addEventListener("click", () => {
+    document.getElementById("drill-wrap").style.display = "none";
+    document.getElementById("setup").style.display = "block";
+  });
+
+  document.getElementById("answer-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (answered) return;
+    const input = document.getElementById("answer-input");
+    const given = input.value.trim().toLowerCase();
+    if (!given) return;
+    const correct = current.verb[current.tense][current.pronounIdx];
+    const correctLower = correct.toLowerCase();
+    const fb = document.getElementById("feedback");
+    totalCount++;
+    answered = true;
+    input.disabled = true;
+
+    if (given === correctLower) {
+      correctCount++;
+      fb.className = "feedback show good";
+      fb.innerHTML = "Richtig — <strong>" + correct + "</strong>";
+    } else if (stripAccents(given) === stripAccents(correctLower)) {
+      fb.className = "feedback show close";
+      fb.innerHTML = "Fast! Nur der Akzent fehlt: <strong>" + correct + "</strong>";
+    } else {
+      fb.className = "feedback show bad";
+      fb.innerHTML = "Richtig wäre: <strong>" + correct + "</strong>";
+    }
+    updateScore();
+    document.getElementById("next-btn").className = "next-btn show";
+  });
+
+  document.getElementById("next-btn").addEventListener("click", () => {
+    pickQuestion();
+    renderQuestion();
+  });
+
+  // ---------- ENDINGS DRILL ----------
+  let endTense = "mix";
+  let endGroup = "mixg";
+
+  wireChoiceRow("end-tense-choices", (val) => val === "pret" ? "sel-indef" : val === "imp" ? "sel-imperf" : "sel-neutral", (val) => endTense = val);
+  wireChoiceRow("end-group-choices", () => "sel-neutral", (val) => endGroup = val);
+
+  let endCurrent = null; // { inf, group, tense, forms }
+  let endFormsCorrect = 0, endRounds = 0;
+  let endAnswered = false;
+
+  function pickEndGroup() {
+    if (endGroup === "mixg") {
+      const groups = ["ar","er","ir"];
+      return groups[Math.floor(Math.random() * groups.length)];
+    }
+    return endGroup;
+  }
+  function pickEndTense() {
+    if (endTense === "mix") return Math.random() < 0.5 ? "pret" : "imp";
+    return endTense;
+  }
+
+  function endUpdateScore() {
+    document.getElementById("end-score-text").textContent = endFormsCorrect + " Formen richtig · " + endRounds + " Runden";
+  }
+
+  function buildEndRound() {
+    const group = pickEndGroup();
+    const tense = pickEndTense();
+    const verbs = REGULAR_POOL[group];
+    const inf = verbs[Math.floor(Math.random() * verbs.length)];
+    const forms = conjugateRegular(inf, group, tense);
+    endCurrent = { inf, group, tense, forms };
+  }
+
+  function renderEndRound() {
+    const { inf, group, tense } = endCurrent;
+    const flag = document.getElementById("end-tense-flag");
+    flag.textContent = tense === "pret" ? "Indefinido" : "Imperfecto";
+    flag.className = "tense-flag " + (tense === "pret" ? "indef" : "imperf");
+    document.getElementById("end-q-infinitive").textContent = inf;
+    document.getElementById("end-q-hint").textContent = "-" + group + " regelmäßig · alle sechs Formen eintragen";
+
+    const grid = document.getElementById("end-input-grid");
+    grid.innerHTML = "";
+    PRONOUNS.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "end-row";
+      row.innerHTML = `
+        <span class="end-p">${p}</span>
+        <input type="text" data-idx="${i}" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <span class="end-correct" data-idx="${i}"></span>`;
+      grid.appendChild(row);
+    });
+    document.getElementById("end-next-btn").className = "next-btn";
+    document.getElementById("end-answer-form").style.display = "block";
+    endAnswered = false;
+    setTimeout(() => {
+      const first = grid.querySelector('input[data-idx="0"]');
+      if (first) first.focus();
+    }, 50);
+  }
+
+  document.getElementById("end-start-btn").addEventListener("click", () => {
+    endFormsCorrect = 0; endRounds = 0;
+    endUpdateScore();
+    document.getElementById("end-setup").style.display = "none";
+    document.getElementById("end-drill-wrap").style.display = "flex";
+    buildEndRound();
+    renderEndRound();
+  });
+
+  document.getElementById("end-change-setup").addEventListener("click", () => {
+    document.getElementById("end-drill-wrap").style.display = "none";
+    document.getElementById("end-setup").style.display = "block";
+  });
+
+  document.getElementById("end-answer-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (endAnswered) return;
+    endAnswered = true;
+    endRounds++;
+    const grid = document.getElementById("end-input-grid");
+    const inputs = grid.querySelectorAll("input");
+    inputs.forEach(input => {
+      const idx = parseInt(input.dataset.idx, 10);
+      const correct = endCurrent.forms[idx];
+      const given = input.value.trim().toLowerCase();
+      const correctLabel = grid.querySelector('.end-correct[data-idx="' + idx + '"]');
+      input.disabled = true;
+      if (given === correct.toLowerCase()) {
+        input.classList.add("r-good");
+        endFormsCorrect++;
+      } else if (stripAccents(given) === stripAccents(correct.toLowerCase()) && given.length > 0) {
+        input.classList.add("r-close");
+        correctLabel.textContent = "Akzent: " + correct;
+        correctLabel.classList.add("show");
+      } else {
+        input.classList.add("r-bad");
+        correctLabel.textContent = correct;
+        correctLabel.classList.add("show");
+      }
+    });
+    endUpdateScore();
+    document.getElementById("end-answer-form").querySelector("button[type=submit]").style.display = "none";
+    document.getElementById("end-next-btn").className = "next-btn show";
+  });
+
+  document.getElementById("end-next-btn").addEventListener("click", () => {
+    buildEndRound();
+    renderEndRound();
+    document.getElementById("end-answer-form").querySelector("button[type=submit]").style.display = "block";
+  });
+
+  // ---------- REFERENCE TABLES ----------
+  const refList = document.getElementById("ref-list");
+  VERBS.forEach(v => {
+    const det = document.createElement("details");
+    det.className = "ref-verb";
+    const pretRows = PRONOUNS.map((p, i) => `<tr><td class="p">${p}</td><td class="f">${v.pret[i]}</td></tr>`).join("");
+    const impRows = PRONOUNS.map((p, i) => `<tr><td class="p">${p}</td><td class="f">${v.imp[i]}</td></tr>`).join("");
+    det.innerHTML = `
+      <summary>${v.inf} <span class="tag">${v.tag}</span></summary>
+      <div class="ref-tables">
+        <div class="ref-col indef"><h4>INDEFINIDO</h4><table>${pretRows}</table></div>
+        <div class="ref-col imperf"><h4>IMPERFECTO</h4><table>${impRows}</table></div>
+      </div>`;
+    refList.appendChild(det);
+  });
+})();
+</script>
+
+</body>
+</html>
